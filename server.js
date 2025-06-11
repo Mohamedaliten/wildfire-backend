@@ -31,20 +31,15 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
-      // Next.js origins
-      process.env.NEXTJS_URL || "http://localhost:3000",
-      process.env.WEBSITE_URL,
-      
-      // React Native development origins
+      "http://localhost:3000",
+      "http://localhost:3001",
       "http://localhost:19006", // Expo dev server
       "exp://localhost:19000",  // Expo client
       "http://localhost:8081",  // Metro bundler
       "http://10.0.2.2:3001",   // Android emulator
-      
-      // Production origins
+      process.env.NEXTJS_URL,
+      process.env.WEBSITE_URL,
       process.env.PRODUCTION_DOMAIN,
-      
-      // Custom origins
       ...(process.env.ALLOWED_ORIGINS?.split(',') || [])
     ].filter(Boolean),
     methods: ["GET", "POST"],
@@ -66,39 +61,25 @@ app.use(helmet({
 
 // Enhanced CORS for both platforms
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Always allow requests with no origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
+  origin: [
+    // Next.js development
+    'http://localhost:3000',
+    'http://localhost:3001',
     
-    const allowedOrigins = [
-      // Next.js
-      process.env.NEXTJS_URL || 'http://localhost:3000',
-      process.env.WEBSITE_URL,
-      
-      // React Native development
-      'http://localhost:19006',
-      'exp://localhost:19000',
-      'http://localhost:8081',
-      'http://10.0.2.2:3001',
-      
-      // Production
-      process.env.PRODUCTION_DOMAIN,
-      
-      // Custom
-      ...(process.env.ALLOWED_ORIGINS?.split(',') || [])
-    ].filter(Boolean);
+    // React Native development
+    'http://localhost:19006',
+    'exp://localhost:19000',
+    'http://localhost:8081',
+    'http://10.0.2.2:3001',
     
-    const isAllowed = allowedOrigins.some(allowedOrigin => 
-      origin === allowedOrigin || origin.startsWith(allowedOrigin)
-    );
+    // Environment variables
+    process.env.NEXTJS_URL,
+    process.env.WEBSITE_URL,
+    process.env.PRODUCTION_DOMAIN,
     
-    if (isAllowed || process.env.NODE_ENV === 'development') {
-      callback(null, true);
-    } else {
-      logger.warn(`CORS blocked origin: ${origin}`);
-      callback(null, true); // Allow in development
-    }
-  },
+    // Custom origins from env
+    ...(process.env.ALLOWED_ORIGINS?.split(',') || [])
+  ].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
@@ -108,8 +89,11 @@ const corsOptions = {
     'X-Client-Type',     // 'nextjs' or 'react-native'
     'X-Client-Version',  // Client version
     'X-Device-Info',     // Device information
-    'X-Session-ID'       // Session tracking
-  ]
+    'X-Session-ID',      // Session tracking
+    'Origin',
+    'Accept'
+  ],
+  optionsSuccessStatus: 200 // For legacy browser support
 };
 
 app.use(cors(corsOptions));
