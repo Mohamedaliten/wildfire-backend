@@ -1,0 +1,36 @@
+# Render Blueprint for Wildfire Backend
+services:
+  - type: web
+    name: wildfire-backend-api
+    env: node
+    region: ohio # or your preferred region
+    plan: starter # Change to standard/pro for production
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ENABLE_WEBSOCKET
+        value: true
+      # Add your environment variables here or set them in Render dashboard
+      - key: AWS_REGION
+        sync: false # Set in dashboard
+      - key: AWS_ACCESS_KEY_ID
+        sync: false # Set in dashboard
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false # Set in dashboard
+      - key: DYNAMODB_TABLE_NAME
+        sync: false # Set in dashboard
+      - key: SNS_TOPIC_ARN
+        sync: false # Set in dashboard
+      - key: ALLOWED_ORIGINS
+        value: https://your-nextjs-app.vercel.app,https://your-domain.com
+    autoDeploy: true
+    branch: main # or your default branch
+    healthCheckPath: /health
+    disk:
+      name: wildfire-backend-disk
+      size: 1GB
+      mountPath: /opt/render/project/logs
